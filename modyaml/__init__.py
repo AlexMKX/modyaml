@@ -14,3 +14,6 @@ def load(filename: str) -> dict[str, Any]:
         template = jinja2.Template(s)
         rendered = template.render(**dict(os.environ))
         config = yaml.load(rendered, Loader=yaml.FullLoader)
+        return config
+
+from .load import load
