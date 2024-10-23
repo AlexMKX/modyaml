@@ -63,11 +63,6 @@ It is possible to trigger the config flow processing debug to standard logger.
 In order to do this, the following environment variables can be used:
 
 ```shell
-# Dump Collected YAML after includes proocessing
-export MODYAML_DEBUG_STAGE_1=1 
-# Dump the YAML contents after jinja2 processing (including env vars substitution)
-export MODYAML_DEBUG_STAGE_2=1
-# Dump the resulted dict as loaded from yaml
-export MODYAML_DEBUG_STAGE_3=1
+export MODYAML_LOG_LEVEL=DEBUG
 ```
  
