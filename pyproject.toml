@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "modyaml"
 description = "Modular Yaml for configuration management"
 authors = [
-    {name = "AlexMKX", email = "your.email@example.com"},
+    {name = "AlexMKX", email = "pypi-alex@xxl.cx"},
 ]
 license = {text = "BSD 3-Clause License"}
 classifiers = [
@@ -17,6 +17,8 @@ dynamic = ["version", "dependencies"]
 readme = "readme.md"
 
 [tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "no-local-version"
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
