@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  pypi:
+  pypi-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -40,7 +40,22 @@ jobs:
       - name: Build package
         run: python -m build
 
-      - name: Publish package
+#      - name: Publish package
+#        uses: pypa/gh-action-pypi-publish@release/v1
+  pypi-publish:
+    needs:
+      - pypi-build
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retrieve release distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Publish release distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 #        with:
 #          password: ${{ secrets.PYPI_API_TOKEN }}
