@@ -1,5 +1,8 @@
 [build-system]
-requires = ["setuptools" ,"setuptools_scm[toml]"]
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
