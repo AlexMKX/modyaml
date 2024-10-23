@@ -16,4 +16,3 @@ def load(filename: str) -> dict[str, Any]:
         config = yaml.load(rendered, Loader=yaml.FullLoader)
         return config
 
-from .load import load
