@@ -7,6 +7,7 @@ import fsspec
 import jinja2
 import yaml
 import yaml_include
+from pprint import pformat
 
 
 def load(filename: str) -> dict[str, Any]:
@@ -26,5 +27,6 @@ def load(filename: str) -> dict[str, Any]:
         rendered = template.render(**dict(os.environ))
         logger.debug(f"Stage 2: Rendered YAML:\n{rendered}")
         config = yaml.load(rendered, Loader=yaml.FullLoader)
-        logger.debug(f"Stage 3: Parsed YAML:\n{config}")
+        formatted_config = pformat(config, compact=True)
+        logger.debug(f"Stage 3: Parsed YAML:\n{formatted_config}")
         return config
