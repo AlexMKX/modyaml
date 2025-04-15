@@ -1,3 +1,18 @@
+Metadata-Version: 2.4
+Name: modyaml
+Version: 0.0.post16
+Summary: Modular Yaml for configuration management
+Author-email: AlexMKX <pypi-alex@xxl.cx>
+License: BSD 3-Clause License
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python :: 3
+Description-Content-Type: text/markdown
+Requires-Dist: pyyaml-include
+Requires-Dist: pyyaml
+Requires-Dist: fsspec
+Requires-Dist: gcsfs
+Requires-Dist: jinja2
+
 # ModYaml
 
 ModYaml is a Python module designed for advanced YAML configuration management, offering modular, flexible, and powerful configuration capabilities.

@@ -1,0 +1,9 @@
+# Включаемый файл для тестирования !include
+
+value1: "Значение 1 с {{ TEST_VAR }}"
+raw_value: !raw "Значение с необработанным {{ TEST_VAR }}"
+nested:
+  sub_value: "Вложенное значение {{ TEST_VAR }}"
+
+# Вложенное включение
+nested_include: !include nested_include.yaml 
