@@ -1,0 +1,4 @@
+include readme.md
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .git* 

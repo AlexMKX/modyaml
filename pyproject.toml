@@ -22,3 +22,6 @@ local_scheme = "no-local-version"
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools]
+include-package-data = true
