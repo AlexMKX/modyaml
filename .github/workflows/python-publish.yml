@@ -48,10 +48,21 @@ jobs:
           echo "PACKAGE_VERSION=0.0.dev${VERSION_DATE}" >> $GITHUB_ENV
           echo "Generated version: 0.0.dev${VERSION_DATE}"
 
+      - name: Clean dist directory
+        run: |
+          rm -rf dist/
+          mkdir -p dist/
+          echo "Cleaned dist directory"
+
       - name: Build package
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ env.PACKAGE_VERSION }}
         run: python -m build
+
+      - name: List dist contents
+        run: |
+          echo "Contents of dist directory:"
+          ls -la dist/
 
       - name: upload dists
         uses: actions/upload-artifact@v4
@@ -73,6 +84,11 @@ jobs:
         with:
           name: release-dists
           path: dist/
+
+      - name: List dist contents before publish
+        run: |
+          echo "Contents of dist directory before publish:"
+          ls -la dist/
 
       - name: Publish release distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
