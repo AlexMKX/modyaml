@@ -18,8 +18,7 @@ readme = "readme.md"
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
-local_scheme = "node-and-date"
-fallback_version = "0.0.dev0"
+local_scheme = "no-local-version"
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
