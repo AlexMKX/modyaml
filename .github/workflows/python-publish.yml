@@ -42,7 +42,14 @@ jobs:
         run: |
           python -m pytest tests/
 
+      - name: Generate Version
+        run: |
+          echo "PACKAGE_VERSION=0.0.dev${{ github.run_id }}" >> $GITHUB_ENV
+          echo "Generated version: 0.0.dev${{ github.run_id }}"
+
       - name: Build package
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ env.PACKAGE_VERSION }}
         run: python -m build
 
       - name: upload dists
