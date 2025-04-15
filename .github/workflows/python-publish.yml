@@ -44,8 +44,9 @@ jobs:
 
       - name: Generate Version
         run: |
-          echo "PACKAGE_VERSION=0.0.dev${{ github.run_id }}" >> $GITHUB_ENV
-          echo "Generated version: 0.0.dev${{ github.run_id }}"
+          VERSION_DATE=$(date '+%Y%m%d%H%M')
+          echo "PACKAGE_VERSION=0.0.dev${VERSION_DATE}" >> $GITHUB_ENV
+          echo "Generated version: 0.0.dev${VERSION_DATE}"
 
       - name: Build package
         env:
