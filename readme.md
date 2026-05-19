@@ -84,6 +84,73 @@ database_url: {{ DB_URL | default('localhost:5432') }}
 raw_value: !raw "{{ ENV_VAR }}"
 ```
 
+## Command-line interface
+
+ModYaml ships a small CLI for use in build pipelines. The current command
+is `flatten`, which resolves `!include` directives into a single
+self-contained YAML document while **preserving jinja-style placeholders
+(`{{ VAR }}`) as plain strings**. This is the right thing for build-time
+artifact generation: the resulting file can be safely published and then
+rendered at runtime by `modyaml.load()` inside the target environment,
+where the real env vars live.
+
+### Install
+
+`modyaml` exposes a console-script entry point, so it works with `pipx`:
+
+```shell
+# Run without installing (recommended for CI):
+pipx run modyaml flatten config.yml -o config.flattened.yml
+
+# Or install once and call directly:
+pipx install modyaml
+modyaml flatten config.yml -o config.flattened.yml
+```
+
+Plain `pip install modyaml` also works and gives you the same `modyaml`
+executable on `$PATH`.
+
+### Usage
+
+```shell
+# Write flattened YAML to a file:
+modyaml flatten config.yml -o config.flattened.yml
+
+# Write to stdout (default when -o is omitted):
+modyaml flatten config.yml > config.flattened.yml
+
+# Or be explicit about stdout:
+modyaml flatten config.yml -o -
+```
+
+`<input>` may be any path or URL that `fsspec` understands, the same as
+`!include` itself (local path, `s3://`, `gs://`, `http(s)://`, ...).
+
+### What `flatten` does (and does not) do
+
+| Directive / construct       | `flatten` behaviour                                |
+| --------------------------- | -------------------------------------------------- |
+| `!include path/to/file.yml` | Inlined recursively at flatten time                |
+| `{{ VAR }}`                 | **Preserved verbatim** as a string                 |
+| `!raw "..."`                | Converted to a plain string (the marker is no longer needed because flatten never renders jinja) |
+| `{% raw %}...{% endraw %}`  | Preserved as part of the surrounding string       |
+
+For full processing (includes + jinja + env vars) use `modyaml.load()`
+from Python, which is unchanged.
+
+### Python API
+
+The same behaviour is available programmatically:
+
+```python
+import modyaml
+import yaml
+
+data = modyaml.flatten('config.yml')          # !include resolved, jinja kept
+with open('config.flattened.yml', 'w') as f:
+    yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
+```
+
 ## Debugging configs
 
 It is possible to trigger the config flow processing debug to standard logger.
