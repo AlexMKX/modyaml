@@ -15,6 +15,7 @@ except ImportError:
 
 class RawString:
     """Class for storing raw strings that should not be interpolated."""
+
     def __init__(self, value):
         self.value = value
 
@@ -30,14 +31,15 @@ def raw_constructor(loader, node):
     return RawString(loader.construct_scalar(node))
 
 
-def process_templates(obj: Union[Dict, list, str, RawString, Any], env: jinja2.Environment, context: dict) -> Union[Dict, list, str, Any]:
+def process_templates(obj: Union[Dict, list, str, RawString, Any], env: jinja2.Environment,
+                      context: dict) -> Union[Dict, list, str, Any]:
     """Recursively process templates in the data structure, skipping RawString instances.
-    
+
     Args:
         obj: The object to process (can be dict, list, str, RawString, or any other type)
         env: Jinja2 environment for template processing
         context: Dictionary with variables for template rendering
-        
+
     Returns:
         Processed object with templates rendered (except for RawString values)
     """
@@ -51,6 +53,68 @@ def process_templates(obj: Union[Dict, list, str, RawString, Any], env: jinja2.E
     elif isinstance(obj, RawString):
         return str(obj)
     return obj
+
+
+def _strip_raw(obj: Any) -> Any:
+    """Recursively convert RawString instances to plain strings.
+
+    Used by `flatten` to produce a plain Python structure (without `!raw` semantics)
+    suitable for `yaml.safe_dump`. Note that this discards the "do not interpolate"
+    marker, which is fine for flattening: the resulting file will not be jinja-rendered
+    again at flatten time.
+    """
+    if isinstance(obj, dict):
+        return {k: _strip_raw(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_strip_raw(v) for v in obj]
+    if isinstance(obj, RawString):
+        return str(obj)
+    return obj
+
+
+def _register_constructors(filename: str) -> None:
+    """Register YAML constructors for !include and !raw based on the source filename.
+
+    Splits a setup step that's shared between `load` and `flatten`.
+    """
+    pr = urlparse(filename)
+    base_dir = pr.netloc + os.path.dirname(pr.path)
+    yaml.add_constructor("!include", yaml_include.Constructor(
+        base_dir=base_dir,
+        fs=fsspec.core.url_to_fs(filename)[0],
+    ))
+    yaml.add_constructor("!raw", raw_constructor)
+
+
+def flatten(filename: str) -> Dict[str, Any]:
+    """Resolve `!include` directives without rendering jinja templates.
+
+    Returns a plain dict where:
+    - All `!include` directives are inlined recursively.
+    - Jinja-style placeholders like `{{ VAR }}` are preserved verbatim as strings.
+    - `!raw`-tagged scalars are converted to plain strings (they carry no extra
+      semantics once jinja rendering is skipped).
+
+    This is the function intended for build-time flattening: produce a single
+    self-contained YAML artifact that is rendered at runtime by `load()` inside
+    the target environment (where the real env vars live).
+
+    Args:
+        filename: Path or URL to the root YAML file.
+
+    Returns:
+        Plain dict ready to be serialised via `yaml.safe_dump`.
+
+    Raises:
+        ValueError: If the root YAML document is not a mapping.
+    """
+    _register_constructors(filename)
+    with fsspec.open(filename, "r") as f:
+        content = f.read()
+    config = yaml.full_load(content)
+    if not isinstance(config, dict):
+        raise ValueError("YAML file must contain a dictionary at the root level")
+    return _strip_raw(config)
 
 
 def load(filename: str) -> Dict[str, Any]:
@@ -76,34 +140,30 @@ def load(filename: str) -> Dict[str, Any]:
     log_level = os.environ.get('MODYAML_LOG_LEVEL')
     if log_level:
         logger.setLevel(log_level)
-    
+
     # Step 1: Configure YAML for file includes and raw tags
-    pr = urlparse(filename)
-    base_dir = pr.netloc + os.path.dirname(pr.path)
-    yaml.add_constructor("!include", yaml_include.Constructor(base_dir=base_dir,
-                                                            fs=fsspec.core.url_to_fs(filename)[0]))
-    yaml.add_constructor("!raw", raw_constructor)
-    
+    _register_constructors(filename)
+
     # Step 2: Open and read the file
     with fsspec.open(filename, "r") as f:
         content = f.read()
-    
+
     # Step 3: Load YAML (before template processing)
     config = yaml.full_load(content)
     if not isinstance(config, dict):
         raise ValueError("YAML file must contain a dictionary at the root level")
-    
+
     # Step 4: Configure Jinja2
     env = jinja2.Environment(
         keep_trailing_newline=True,
         autoescape=False
     )
-    
+
     # Step 5: Process templates, skipping raw values
     config = process_templates(config, env, dict(os.environ))
     if not isinstance(config, dict):
         raise ValueError("After processing templates, the result must be a dictionary")
-    
+
     formatted_config = pformat(config, compact=True)
     logger.debug(f"Stage 2: Parsed YAML:\n{formatted_config}")
     return config
